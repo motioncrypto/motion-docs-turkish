@@ -1,5 +1,4 @@
-**XMN Motion Coin Masternode Nasıl Kurulur?**
-
+XMN Motion Coin Masternode Nasıl Kurulur?
 -------
 
 ### Preparation
