@@ -1,159 +1,177 @@
-Motion MasterNode Install from script (Recommended)
+**XMN Motion Coin Masternode Nasıl Kurulur?**
+
 -------
 
 ### Preparation
 
-Get a VPS from a provider like [DigitalOcean](https://www.digitalocean.com), [Vultr](https://www.vultr.com/), [Linode](https://www.linode.com/), etc.
+Motion Coin geliştirdiği yazılımı sayesinde klasik Masternode kurulumu devrini geride bırakıyor. Yatırımcıları için kolaylık sağlamak 
+adına özenle hazırlanmış Masternode kurulum script’i sayesinde dakikalar içerisinde hiçbir ön deneyim gerektirmeden bir Masternode 
+kurulumu gerçekleştiriliyor. 
+Kurulum yapılmadan önce Motion cüzdanınızda tam olarak 1000 XMN teminat olarak bulunması gerekiyor. Bu koinler cüzdanınızda bulunduğu 
+sürece Masternode’unuz aktif kalıp karşılığında pasif bir getiri sağlayacak.
 
-- **Recommended VPS size:** 2GB RAM (if less its ok, we can make swap partition)
-- **It must be Ubuntu 16.04 (Xenial)**
-- Make sure you have a transaction of **exactly 1000 XMN** in your desktop wallet (If you dont, just send 1000 XMN from you to you).
-- motion.conf file on LOCAL wallet MUST BE EMPTY! (if you haven't touched this file it's OK)
-- masternode.conf file on VPS wallet MUST BE EMPTY! (if you haven't touched this file it's OK)
+**Hazırlık**
+-Öncelikle bir VPS server kiralamanız gerekiyor. (Yabancı  veya yerli)
+-Önerilen VPS boyutu: 2GB RAM (daha az ise sorun değil swap memory yapılabilir)
+-VPS işletim sistemi Ubuntu 16.04 (Xenial) olmalı (zorunlu)
+-Cüzdanınıza tam 1000 XMN gönderilmiş olmalı (eğer parça parça geldiyse o zaman kendi adresinize 1000 XMN yollamanız gerekiyor)
+-Lokal cüzdandaki(bilgisayarınızdaki) motion.conf dosyası boş olmalı (eğer daha önce bu dosyaya hiç dokunmadıysanız boştur)
+-VPS cüzdanındaki masternode.conf dosyası boş olmalı (eğer daha önce bu dosyaya hiç dokunmadıysanız boştur)
 
-**NOTES:** `PRE_ENABLED` status is NOT an issue, just restart local wallet and wait a few minutes.
+**Önemli Notlar:** 
+Her Masternode için ayrı bir IP adresinde ihtiyacınız var
 
-'WATCHDOG_EXPIRED' is not a problem if you just installed. Give time for the network to sync, 10 + Minutes
+Masternode Status’unda “Pre-enabled” yazması sorun değil, Lokal cüzdanınızı tekrar başlatıp birkaç dakika bekleyin
 
-You need a different IP for each masternode you plan to host.
+Masternode Status’unda “WATCHDOG_EXPIRED” yazması sorun değil, Lokal cüzdanın senkronize olmasını bekleyip 10-20 dakika bekleyin
 
-### Wallet Setup Part 1
+Scriptin içerisinde Sentinel kendiliğinden yüklü olduğundan ek olarak yüklemenize gerek yoktur, WATCHDOG_EXPIRED durumu kendiliğinden 
+geçecektir
 
-- Open your Motion wallet on your desktop.
-- Click **Receive** tab, then put your Label such as “MN1” and click Request. 
-- Copy the Address and Send **EXACTLY** 1000 XMN to this Address, wait for 15 confirmations.
-- Go to the tab at the bottom that says `Tools`
-- Go to the tab at the top that says `Console`
-- Then run following command:
+### Lokal Cüzdan Kurulumu Bölüm 1
 
-`masternode outputs`
+-Bilgisayarınızdaki Motion cüzdanını açın
+-“Recieve” yazısına tıklayın, “MN1” gibi bir isim verip “Request” tuşuna basın, çıkan adresi kopyalayın
+-Kopyaladığınız adrese tam olarak 1000 XMN yollayın ve 15 confirmation(onay) bekleyin
+-Aşağıdaki “Tools” yazısına tıklayın
+-Yukarıdaki “Console” yazısına tıklayın
+-Şimdi imlecin bulunduğu yere bu kodu yazın:
 
-You should see one line corresponding to the transaction id (tx_id) of your 1000 coins with a digit identifier (digit). Save these two strings in a text file.
+`masternode outputs`
 
-Example:
+Bir satır boyunca transaction_id (tx_id) (işlem adresi) ve hemen yanında digit identifier(rakam belirteci) görmeniz gerekiyor. Bu iki
+metni bir metin dosyasına kaydedin. 
+Örnek:
 ```
 {
   "6a66ad6011ee363c2d97da0b55b73584fef376dc0ef43137b478aa73b4b906b0": "0"
 }
 ```
+Tırnak içindeki ilk uzun metnin adı tx_id , tırnak içindeki tekli rakamın adı ise digit (ileride referans olarak kullanılacaktır)
+Not: Eğer birden fazla satır tx_id görüyorsanız, birden fazla 1000 XMN’lik gönderiniz bulunmakta olduğundandır.
 
-Note that if you get more than 1 line, it’s because you made multiple 1000 coin transactions, with the tx_id and digit associated.
+Şimdi bir metin daha yazalım:
 
-Run the following command:
+`masternode genkey`
 
-`masternode genkey`
+Metni yazdığınızda uzun bir şifre görmeniz gerekiyor: (masternodeprivkey)
 
-You should see a long key: (masternodeprivkey)
+Örnek: `7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
 
-EXAMPLE: `7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+Bu şifre sizin kişiye özel şifrenizdir, bunu da bir metin dosyasına kaydedin, güvende tutun, kimseyle paylaşmayın. Bu şifrenin adı 
+masternodeprivkey ‘dir ve referans olarak ilerde kullanılacaktır.
 
-This is your masternode private key, record it to text file, keep it safe, do not share with anyone. This will be called `masternodeprivkey`
 
-Next, you have to go to the data directory of your wallet:
+Şimdi , cüzdanınızın data directory’sine (genellikle AppData’dadır) gitmelisiniz:
 
-- Go to wallet settings tab and click `Open masternode configuration file`
-- You should see 2 lines both with a # to comment them out.
+-Aşağıda “Settings” yazısına gidip `Open masternode configuration file` yazısına basın
+-Dosyanın içinde # içerisine yazılmış(bilgisayar bu yazıları okuyamaz) iki satır metin görmeniz gerekiyor
+-Metin dosyasının içine yeni bir satır ekleyin (veya içindeki iki satırı silseniz de olur) ve bunu yazın
 
-Please make a new line and add:
+`MN1 YOUR VPS IP:7979 masternodeprivkey tx_id digit`
 
-`MN1 (YOUR VPS IP):7979 masternodeprivkey tx_id digit`
+-MN1 recieve adresinizde yazdığınız isim
+-Your VPS IP sizin VPS serverınızın IP adresidir
+-7979 port sayısıdır ve 7979 olması gerekiyor
+-masternodeprivkey sizin kişisel şifreniz (masternode genkey yazarak aldığımız)
+-tx_id sizin transaction_id(işlem adresi)’nizdir(masternode outputs yazarak aldığımız)
+-digit sizin digit identifier(rakam belirteci)’nizdir(masternode outputs yazınca aldığımız tekli rakam)
 
-Example:
+Örnek:
+`MN1 148.124.58.33:7979 7xxxxxxxxxxxxxxxxxxx 6a66ad6011ee363c2d97da0b0ef43137b478aa73b4b906b0 0`
 
-`MN1 148.124.58.33:7979 7xxxx(you get the idea)xxx 6a66ad6011ee363c2d97da0b0ef43137b478aa73b4b906b0 0`
+**Not:** Her metin parçası arasında bir adet boşluk bırakılacaktır(IP:Port dışında, onlar bitişik olup aralarında “:” bulunması gerekiyor)
+Verilerinizi doğru girip kaydedip dosyayı kapatın
 
-Put your data correctly, **save it** and close.
+Motion Cüzdanınıza gidin, alttan “Settings” e basın, “Show Masternodes Tab” kutucuğunu işaretleyin
 
-Go to Motion Wallet, Click `Settings`, Check `Show Masternodes Tab`.
+Kaydedip çıkın ve Motion cüzdanınızı kapatıp tekrar başlatın
 
-Save and restart your Motion wallet.
+**Not:** Eğer birden fazla Masternode kurmak istiyorsanız aynı `masternode.conf` dosyasının içinde satır ekleyerek aynı adımları tekrarlayın 
+(bir masternode başına bir satır)
 
-Note that each line of the `masternode.conf` file corresponds to one masternode if you want to run more than one node from the same wallet, just make a new line and repeat steps.
+##VPS Kurulumu Bölüm 2
+Hazırlık: Windows kullanıcılarının VPS serverına SSH ile bağlanmak için puTTy adı verilen bir programa ihtiyaçları olacaktır.
 
-**VPS Setup**
+**Not:** Herşeyi “root” kullanıcısı üzerinden gerçekleştireceğiz, herhangi başka bir kullanıcı ile başarısız olunur.
+İşte bu evrede Motion Coin’in yaptığı script sayesinde kurulumunuz diğer klasik koinlerden çok daha az zaman alacaktır
+Şimdi VPS serverınıza bazı yazılımsal güncellemeler/dosyalar indirmeniz gerekiyor. Kopyala yapıştır yapıp entera basınız
+(hepsini tekte yapıştırabilirsiniz noktalı virgüllere göre ayırmanıza gerek yok)
 
-**Preparation:**
-Windows users will need a program called [putty](https://www.putty.org/) to connect to the VPS
-Use SSH to Log into your VPS
+`apt-get update;apt-get upgrade; apt-get install nano software-properties-common git wget -y;`
 
-**Please note:** We will run everything on root user, if you are using any other user will fail.
+Bittikten sonra bu metni (bahsettiğim o script) kopyalayıp yapıştırıp enter a basın:
 
-We need to install some dependencies. Please copy, paste and hit enter:
+`wget https://raw.githubusercontent.com/motioncrypto/motion-docs/master/scripts/masternode.sh`
 
-`apt-get update;apt-get upgrade; apt-get install nano software-properties-common git wget -y;`
+Şimdi sonraki metni yapıştırıp enter a basın:
 
-Now Copy command into the VPS command line and hit enter:
+`chmod +x masternode.sh`
 
-`wget https://raw.githubusercontent.com/motioncrypto/motion-docs/master/scripts/masternode.sh`
-
-Then make it executable:
-
-`chmod +x masternode.sh`
-
-Now lets run it:
+Son olarak bu metni yapıştırıp enter a basın:
 
 `./masternode.sh`
 
+-Size `masternodeprivkey` sorulacaktır. (Konsola masternode genkey yazdığınızda aldığınız size özel masternode şifrenizi)
+masternodeprivkey ‘i girdikten sonra size VPS IP ve port sorulacaktır.
+-Aynen daha önce metin dosyasına da yazdığınız gibi IP:Port olacak şekilde VPS IP’nizi ve 7979 olan port numarasını aralarında “:” olacak 
+şekilde yazıp enter a basın.
+-Size VPS hakkında sorular sorulacak, hepsine “y” diyip entera basın (Kurulumda 2GB RAM’iniz yoksa sorun değil demiştim, sorulara “y” 
+dediğiniz zaman sizin için script swap memory ayarlayacak ve daha düşük RAM’li VPS ile de Masternode’unuzu çalıştırabileceksiniz)
 
-When prompted, enter your `masternodeprivkey` from before.
+Klasik yöntemlerle kurulan Masternode’larda çok daha fazla kod koplayayıp yapıştırmanız gerekiyor olup yükleme işlemini yaklaşık 1 
+saatte tamamlıyor. 
+Geliştirilen script sayesinde VPS kurulumu 10 dakikadan daha kısa bir süre içersinde kurulmuş oluyor.
+Scriptin içerisinde Sentinel kendiliğinden yüklü olduğundan ek olarak yüklemenize gerek yoktur
 
-You will be asked for your VPS IP and a few other questions.
-
-The installation should finish successfully. Ask for help in [discord](https://discord.gg/pTDAaMa) if it doesn't.
-
-Please note, the script will move motiond and motion-cli binaries to /usr/bin folder, so you don't need to navigate to motion/src folder anymore, you can run the commands without "./" on any place now
-
-### Testing:
-
-After the script finishes, you will want to check that it is running properly. 
-Please type in:
-
-`motion-cli getinfo`
-
-If you put wrong Privkey or VIPSIP>:PORT and get an error, you just need edit the .conf file with the correct data with:
-
-`nano /root/.motioncore/motion.conf`
-
-Then save and exit using CTRL+X, Y and Enter, and restart daemon with:
-
-`motiond -daemon`
-
-now test with:
+##Test Etme:
+Script kurulumu bittiğinde herşeyin düzgün çalıştığını kontrol etmek için bazı testler yapın. Bu kodu girin
 
 `motion-cli getinfo`
 
-or
+Eğer yanlış masternodeprivkey veya IP:Port girdiyseniz error alırsınz. Doğru bilgileri girmek için:
+
+`nano /root/.motioncore/motion.conf`
+
+Kaydedip çıkmak için CTRL+X ve sonra Y tuşlarına basıp Enter a basın, sonra girmiş olduğumuz doğru bilgilerle masternode’u çalıştıralım:
+
+`motiond-daemon`
+
+şimdi tekrar test edin:
+
+`motion-cli getinfo`
+
+veya
 
 `motion-cli getblockcount`
 
-If you get an error that file does not exist, it may be that the script failed to build and we need to trace back the problem. Contact devs in [discord](https://discord.gg/pTDAaMa).
+Eğer hala error alıyorsanız Discord’da yetkililerle konuşmaktan çekinmeyin
 
-### Starting Your Masternode
+##Masternode’unuzu Çalıştırmak
 
-Go back to your desktop wallet, to the Masternode tab.
-You need to wait for 15 confirmations in order to start the masternode- you can also check on your VPS by:
+Lokal cüzdanınızda Masternodes bölümüne gidin. Masternode’unuzu başlatabilmek için 15 onay(confirmation) beklemeniz gerekmektedir. 
+
+VPS serverınızın güncel blok sayısını kontrol etmek için bu kodu girin:
 
 `motion-cli getblockcount`
 
-(needs to be more than 0 to be in sync, at the moment of writing this guide we are at block 4883)
+(Güncel olabilmesi için sayının “0” dan büyük olması lazım. Ben bu metni yazarken güncel blok 18745)
 
-**NOTE:** If the Masternode tab isn’t showing, you need to  click settings, check `Show Masternodes Tab` save, and restart the wallet.
+**Not:** Eğer Masternodes Bölmesini göremiyorsanız Motion Cüzdanınıza gidin, alttan “Settings” e basın, “Show Masternodes Tab” kutucuğunu işaretleyin. Sonra cüzdanı kapatıp tekrar açın.
 
-If your Masternode does not show, restart the wallet.
- 
-Now Click `start-all`. Your masternode should be now up and running!
- 
-### Checking Your Masternode
-You can check the masternode status by going to the masternode wallet and typing:
- 
+##Masternode’unuzu Kontrol Etme:
+
+Masternode’unuzun durumunu öğrenmek için VPS serverınıza bu kodu yazın:
+
 `motion-cli masternode status`
- 
-If your masternode is running it should print `Masternode successfully started`.
- 
-You can also check your MN status by local wallet - `tools -> console`, just type:
- 
-`masternode list full XXXXX`
- 
-(Where XXXXX is yours first 5 character of TX_ID).
- 
-**CONGRATULATIONS!**
+
+Eğer Masternode’unuz çalışıyorsa “Masternode successfully started” yazısını görmeniz gerekiyor
+
+Ayrıca Masternode’unuzun durumunu Lokal cüzdanınızdan da görebilirsiniz. Aşağıda “Tools” dan “Console” a basın ve çıkan ekrana bu metni 
+yazın:
+```
+masternode list full XXXXX
+(XXXXX yerine tx_id’nizin ilk 5 karakterini yazmanız gerekiyor)
+```
+Tebrikler!
+
